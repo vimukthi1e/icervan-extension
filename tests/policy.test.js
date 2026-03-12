@@ -119,3 +119,18 @@ test('location.replace hook contributes to risk reasons', () => {
 
   assert.ok(out.reasons.includes('script_navigation_hook'));
 });
+
+
+test('history.replaceState hook contributes to risk reasons', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://dest.example/b',
+    sourceUrl: 'https://source.example',
+    sameOrigin: false,
+    recentUserGesture: false,
+    isMainFrame: true,
+    hookSignal: 'history.replaceState',
+    mode: 'smart'
+  }, baseSettings);
+
+  assert.ok(out.reasons.includes('script_navigation_hook'));
+});

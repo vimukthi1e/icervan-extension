@@ -81,7 +81,7 @@
       reasons.push('redirect_chain');
     }
 
-    if (ctx.hookSignal === 'location.replace' || ctx.hookSignal === 'window.open') {
+    if (ctx.hookSignal === 'location.replace' || ctx.hookSignal === 'location.assign' || ctx.hookSignal === 'window.open' || ctx.hookSignal === 'history.replaceState') {
       score += 20;
       reasons.push('script_navigation_hook');
     }

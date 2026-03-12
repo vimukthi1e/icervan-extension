@@ -43,8 +43,9 @@
     return !!state && state.tempBlockUntil > now;
   }
 
-  function shouldSuppressPrompt(state, now, cooldownMs) {
+  function shouldSuppressPrompt(state, now, cooldownMs, minAttemptsBeforeSuppression) {
     if (!state || !state.lastPromptAt) return false;
+    if ((state.count || 0) < (minAttemptsBeforeSuppression || 2)) return false;
     return now - state.lastPromptAt < cooldownMs;
   }
 

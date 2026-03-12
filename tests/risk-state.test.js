@@ -25,8 +25,11 @@ test('prompt suppression uses cooldown', () => {
   const now = 1000;
   const base = risk.normalizeAttemptState(null, now, settings.suspiciousWindowMs);
   const withPrompt = risk.markPromptShown(base, now, 'p1');
-  assert.equal(risk.shouldSuppressPrompt(withPrompt, now + 500, 1000), true);
-  assert.equal(risk.shouldSuppressPrompt(withPrompt, now + 1200, 1000), false);
+  assert.equal(risk.shouldSuppressPrompt(withPrompt, now + 500, 1000, 2), false);
+
+  const escalated = { ...withPrompt, count: 2 };
+  assert.equal(risk.shouldSuppressPrompt(escalated, now + 500, 1000, 2), true);
+  assert.equal(risk.shouldSuppressPrompt(escalated, now + 1200, 1000, 2), false);
 });
 
 test('prompt key includes tab, source origin, and destination origin', () => {

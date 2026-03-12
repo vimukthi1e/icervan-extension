@@ -248,7 +248,7 @@
       return {};
     }
 
-    if (riskState.shouldSuppressPrompt(attemptUpdate.state, Date.now(), settings.promptCooldownMs)) {
+    if (riskState.shouldSuppressPrompt(attemptUpdate.state, Date.now(), settings.promptCooldownMs, 2)) {
       await logger.appendLog({
         event: 'navigation_prompt_suppressed',
         tabId: details.tabId,
@@ -358,6 +358,18 @@
       storage.getSettings().then((settings) => {
         if (frameId === 0) {
           const state = updateSameDocumentState(sender.tab.id, message.eventType, settings);
+          const suspiciousEvents = new Set(['location.replace', 'location.assign', 'window.open', 'history.replaceState']);
+
+          if (suspiciousEvents.has(message.eventType)) {
+            logger.appendLog({
+              event: 'same_document_signal',
+              tabId: sender.tab.id,
+              frameId,
+              hookType: message.eventType,
+              historyBurstCount: state.historyBurstCount
+            });
+          }
+
           if (state.historyBurstCount >= settings.historyBurstThreshold) {
             logger.appendLog({
               event: 'same_document_burst',

@@ -24,7 +24,7 @@ MVP + hardening pass implemented.
   - Always block this origin
   - Cancel / stay here
 - Local structured logs with ring-buffer cap, viewer summary, JSON export, and clear.
-- Prompt flood controls: cooldown, repeated-attempt windowing, and temporary per-tab+origin suppression.
+- Prompt flood controls: flow-level dedupe (tab + source-origin + destination-origin), cooldown suppression after repeated attempts, and temporary per-tab+destination-origin escalation.
 
 ## Why this architecture (vs userscripts)
 Userscripts are too late for many takeover paths. This extension uses privileged request interception in background context to cancel suspicious main-frame requests before full page takeover where possible, then offers user approval to continue intentionally.
@@ -98,7 +98,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - Browser event timing differs by platform/version; prompt timing may vary.
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
 - Same-document/history API tricks are mostly observable and influence scoring; they cannot always be safely blocked preemptively with Firefox extension APIs.
-- Prompt dedupe is keyed by tab + source-origin + destination-origin, with cooldown suppression and temporary escalation windows; adversarial multi-origin bounce chains can still require multiple user decisions.
+- Prompt dedupe is keyed by tab + source-origin + destination-origin, while cooldown suppression and temporary escalation are tracked per tab + destination-origin; adversarial multi-origin bounce chains can still require multiple user decisions.
 - Gesture attribution is heuristic and can produce false positives/negatives.
 
 ## Packaging
