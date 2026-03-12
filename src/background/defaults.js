@@ -12,11 +12,13 @@
     oneTimeAllowTtlMs: 15000
   };
 
+  const REQUEST_MATCH_PATTERNS = ['http://*/*', 'https://*/*'];
+
   const STORAGE_KEYS = {
     settings: 'navGuard.settings',
     logs: 'navGuard.logs',
     pendingPrompts: 'navGuard.pendingPrompts'
   };
 
-  self.NavGuardDefaults = { DEFAULT_SETTINGS, STORAGE_KEYS };
+  self.NavGuardDefaults = { DEFAULT_SETTINGS, STORAGE_KEYS, REQUEST_MATCH_PATTERNS };
 })();

@@ -33,7 +33,7 @@ Userscripts are too late for many takeover paths. This extension uses privileged
 - `webNavigation`: detect new navigation targets/popups and lifecycle hints.
 - `tabs`: controlled continuation to approved destination.
 - `storage`: local settings + logs.
-- `<all_urls>`: needed to detect and gate navigation attempts broadly.
+- `http://*/*`, `https://*/*`: explicit host patterns required so content scripts and `webRequest` filters reliably match web pages on Firefox/Iceraven.
 
 No telemetry, no remote services, no analytics SDK, no external CDN.
 
@@ -85,7 +85,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - [ ] No remote requests initiated by extension itself.
 
 ## Known limitations
-- Some navigation behavior on Firefox Android variants cannot always be preempted before visible effects.
+- Some navigation behavior on Firefox Android variants cannot always be preempted before visible effects, especially non-HTTP(S) schemes and browser-internal pages that extensions cannot inject into.
 - Browser event timing differs by platform/version; prompt timing may vary.
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
 - Gesture attribution is heuristic and can produce false positives/negatives.

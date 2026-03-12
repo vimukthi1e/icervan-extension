@@ -4,6 +4,7 @@
   const logger = self.NavGuardLogger;
   const policy = self.NavGuardPolicy;
   const approval = self.NavGuardApproval;
+  const requestPatterns = self.NavGuardDefaults.REQUEST_MATCH_PATTERNS;
 
   const tabSignals = new Map();
   const oneTimeAllows = new Map();
@@ -90,7 +91,7 @@
       if (details.type !== 'main_frame') return {};
       return maybeGateNavigation(details, 'beforeRequest');
     },
-    { urls: ['<all_urls>'], types: ['main_frame'] },
+    { urls: requestPatterns, types: ['main_frame'] },
     ['blocking']
   );
 
@@ -98,7 +99,7 @@
     const key = `${details.tabId}:${details.requestId || details.url}`;
     redirectCounts.set(key, (redirectCounts.get(key) || 0) + 1);
     await logger.appendLog({ event: 'redirect_observed', phase: 'redirect', tabId: details.tabId, fromUrl: details.url, toUrl: details.redirectUrl });
-  }, { urls: ['<all_urls>'], types: ['main_frame'] });
+  }, { urls: requestPatterns, types: ['main_frame'] });
 
   api.webNavigation.onCreatedNavigationTarget.addListener(async (details) => {
     const result = await maybeGateNavigation({
