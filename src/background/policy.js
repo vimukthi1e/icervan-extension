@@ -86,6 +86,21 @@
       reasons.push('script_navigation_hook');
     }
 
+    if (ctx.recentSameDocumentSuspicious) {
+      score += 15;
+      reasons.push('same_document_signal');
+    }
+
+    if ((ctx.historyBurstCount || 0) >= (settings.historyBurstThreshold || 4)) {
+      score += 20;
+      reasons.push('history_burst');
+    }
+
+    if ((ctx.repeatedSuspiciousCount || 0) > 1) {
+      score += 10;
+      reasons.push('repeated_suspicious_origin');
+    }
+
     if (ctx.mode === 'strict') {
       return { score, classification: 'strict_gate', action: 'prompt', reasons };
     }

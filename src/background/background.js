@@ -4,13 +4,16 @@
   const logger = self.NavGuardLogger;
   const policy = self.NavGuardPolicy;
   const approval = self.NavGuardApproval;
+  const riskState = self.NavGuardRiskState;
   const requestPatterns = self.NavGuardDefaults.REQUEST_MATCH_PATTERNS;
 
   const frameSignals = new Map();
+  const tabSameDocumentState = new Map();
   const oneTimeAllows = new Map();
   const redirectCounts = new Map();
   const activePromptKeys = new Map();
   const promptIdToKey = new Map();
+  const suspiciousAttempts = new Map();
 
   function getAllowKey(tabId, targetUrl) {
     return `${tabId}|${targetUrl}`;
@@ -21,6 +24,11 @@
   }
 
   function getPromptKey(tabId, targetUrl) {
+    const origin = policy.parseOrigin(targetUrl) || String(targetUrl || '');
+    return `${tabId}|${origin}`;
+  }
+
+  function getSuspicionKey(tabId, targetUrl) {
     const origin = policy.parseOrigin(targetUrl) || String(targetUrl || '');
     return `${tabId}|${origin}`;
   }
@@ -72,6 +80,55 @@
     }
   }
 
+  function updateSameDocumentState(tabId, eventType, settings) {
+    const now = Date.now();
+    const previous = tabSameDocumentState.get(tabId) || {
+      historyBurstCount: 0,
+      lastHistoryEventTs: 0,
+      recentSameDocumentSuspiciousTs: 0,
+      lastEventType: ''
+    };
+
+    const historyEvents = new Set(['history.pushState', 'history.replaceState', 'hashchange', 'popstate']);
+    const suspiciousEvents = new Set(['location.replace', 'location.assign', 'window.open', 'history.replaceState']);
+
+    const next = { ...previous, lastEventType: eventType };
+
+    if (historyEvents.has(eventType)) {
+      if (now - previous.lastHistoryEventTs <= settings.historyBurstWindowMs) {
+        next.historyBurstCount = previous.historyBurstCount + 1;
+      } else {
+        next.historyBurstCount = 1;
+      }
+      next.lastHistoryEventTs = now;
+    }
+
+    if (suspiciousEvents.has(eventType)) {
+      next.recentSameDocumentSuspiciousTs = now;
+    }
+
+    tabSameDocumentState.set(tabId, next);
+    return next;
+  }
+
+  function getSameDocumentContext(tabId, settings) {
+    const state = tabSameDocumentState.get(tabId);
+    if (!state) {
+      return {
+        recentSameDocumentSuspicious: false,
+        historyBurstCount: 0,
+        sameDocumentLastEventType: ''
+      };
+    }
+
+    const recentSameDocumentSuspicious = Date.now() - (state.recentSameDocumentSuspiciousTs || 0) <= settings.historyBurstWindowMs;
+    return {
+      recentSameDocumentSuspicious,
+      historyBurstCount: state.historyBurstCount || 0,
+      sameDocumentLastEventType: state.lastEventType || ''
+    };
+  }
+
   async function classifyRequest(details, requestType) {
     const settings = await storage.getSettings();
     const sourceFrameId = requestType === 'createdNavigationTarget'
@@ -85,6 +142,9 @@
       || '';
 
     const sameOrigin = policy.parseOrigin(sourceUrl) && policy.parseOrigin(sourceUrl) === policy.parseOrigin(details.url);
+    const sameDocumentCtx = getSameDocumentContext(details.tabId, settings);
+    const attemptKey = getSuspicionKey(details.tabId, details.url);
+    const attemptState = riskState.normalizeAttemptState(suspiciousAttempts.get(attemptKey), Date.now(), settings.suspiciousWindowMs);
 
     const ctx = {
       mode: settings.mode,
@@ -95,24 +155,49 @@
       recentUserGesture: getRecentGesture(details.tabId, sourceFrameId, settings.gestureWindowMs),
       requestType,
       redirectCount: getRedirectCount(details.tabId, details.requestId, details.url),
-      hookSignal: getHookSignal(details.tabId, sourceFrameId)
+      hookSignal: getHookSignal(details.tabId, sourceFrameId),
+      recentSameDocumentSuspicious: sameDocumentCtx.recentSameDocumentSuspicious,
+      historyBurstCount: sameDocumentCtx.historyBurstCount,
+      repeatedSuspiciousCount: attemptState.count
     };
 
     return {
       settings,
       ctx,
+      attemptKey,
+      attemptState,
       decision: policy.evaluateNavigation(ctx, settings)
     };
   }
 
+  function markOriginAllowed(tabId, targetUrl) {
+    const key = getSuspicionKey(tabId, targetUrl);
+    const next = riskState.clearStateForAllow(suspiciousAttempts.get(key), Date.now());
+    suspiciousAttempts.set(key, next);
+  }
+
   async function maybeGateNavigation(details, requestType) {
     if (details.tabId < 0) return {};
+
     if (consumeOneTimeAllow(details.tabId, details.url)) {
+      markOriginAllowed(details.tabId, details.url);
       await logger.appendLog({ event: 'one_time_allow_consumed', tabId: details.tabId, targetUrl: details.url, phase: 'request' });
       return {};
     }
 
-    const { settings, ctx, decision } = await classifyRequest(details, requestType);
+    const { settings, ctx, attemptKey, attemptState, decision } = await classifyRequest(details, requestType);
+
+    if (riskState.isTemporarilyBlocked(attemptState, Date.now())) {
+      await logger.appendLog({
+        event: 'navigation_temp_block_active',
+        phase: 'request',
+        tabId: details.tabId,
+        frameId: details.frameId,
+        targetUrl: details.url,
+        tempBlockUntil: attemptState.tempBlockUntil
+      });
+      return { cancel: true };
+    }
 
     await logger.appendLog({
       event: 'navigation_attempt',
@@ -123,10 +208,18 @@
       targetUrl: ctx.targetUrl,
       sameOrigin: ctx.sameOrigin,
       recentUserGesture: ctx.recentUserGesture,
+      redirectCount: ctx.redirectCount,
+      sameDocumentLastEventType: ctx.sameDocumentLastEventType,
       decision
     });
 
-    if (decision.action === 'allow') return {};
+    if (decision.action === 'allow') {
+      markOriginAllowed(details.tabId, details.url);
+      return {};
+    }
+
+    const attemptUpdate = riskState.registerSuspiciousAttempt(attemptState, Date.now(), settings);
+    suspiciousAttempts.set(attemptKey, attemptUpdate.state);
 
     if (decision.action === 'block') {
       await logger.appendLog({
@@ -140,8 +233,30 @@
       return { cancel: true };
     }
 
+    if (attemptUpdate.escalatedToTempBlock) {
+      await logger.appendLog({
+        event: 'navigation_temp_block_escalated',
+        tabId: details.tabId,
+        targetUrl: details.url,
+        tempBlockUntil: attemptUpdate.state.tempBlockUntil,
+        attemptsInWindow: attemptUpdate.state.count
+      });
+      return { cancel: true };
+    }
+
     if (decision.action !== 'prompt') {
       return {};
+    }
+
+    if (riskState.shouldSuppressPrompt(attemptUpdate.state, Date.now(), settings.promptCooldownMs)) {
+      await logger.appendLog({
+        event: 'navigation_prompt_suppressed',
+        tabId: details.tabId,
+        targetUrl: details.url,
+        promptCooldownMs: settings.promptCooldownMs,
+        attemptsInWindow: attemptUpdate.state.count
+      });
+      return { cancel: true };
     }
 
     const promptKey = getPromptKey(details.tabId, details.url);
@@ -157,6 +272,9 @@
     }
 
     const created = await approval.createPrompt({ ...ctx, decision, tabId: details.tabId, frameId: details.frameId }, settings);
+    const attemptWithPrompt = riskState.markPromptShown(attemptUpdate.state, Date.now(), created.id);
+    suspiciousAttempts.set(attemptKey, attemptWithPrompt);
+
     activePromptKeys.set(promptKey, {
       promptId: created.id,
       promptTabId: created.promptTabId,
@@ -236,7 +354,21 @@
         lastHookTs: Date.now(),
         url: message.url || sender.tab.url || ''
       });
+
       storage.getSettings().then((settings) => {
+        if (frameId === 0) {
+          const state = updateSameDocumentState(sender.tab.id, message.eventType, settings);
+          if (state.historyBurstCount >= settings.historyBurstThreshold) {
+            logger.appendLog({
+              event: 'same_document_burst',
+              tabId: sender.tab.id,
+              frameId,
+              hookType: message.eventType,
+              historyBurstCount: state.historyBurstCount
+            });
+          }
+        }
+
         if (settings.logContentEvents) {
           logger.appendLog({
             event: 'page_hook',
@@ -287,6 +419,7 @@
 
         if (action === 'continue_once') {
           oneTimeAllows.set(getAllowKey(context.tabId, context.targetUrl), Date.now() + settings.oneTimeAllowTtlMs);
+          markOriginAllowed(context.tabId, context.targetUrl);
           await api.tabs.update(context.tabId, { url: context.targetUrl, active: true });
           await logger.appendLog({ event: 'prompt_resolved', resolution: action, tabId: context.tabId, targetUrl: context.targetUrl });
           if (typeof promptTabId === 'number') {
@@ -301,6 +434,7 @@
           const origin = policy.parseOrigin(context.targetUrl);
           const next = await storage.saveSettings({ allowlist: [...new Set([...(settings.allowlist || []), origin])] });
           oneTimeAllows.set(getAllowKey(context.tabId, context.targetUrl), Date.now() + settings.oneTimeAllowTtlMs);
+          markOriginAllowed(context.tabId, context.targetUrl);
           await api.tabs.update(context.tabId, { url: context.targetUrl, active: true });
           await logger.appendLog({ event: 'prompt_resolved', resolution: action, origin, tabId: context.tabId, targetUrl: context.targetUrl });
           if (typeof promptTabId === 'number') {
@@ -314,6 +448,10 @@
         if (action === 'always_block_origin') {
           const origin = policy.parseOrigin(context.targetUrl);
           const next = await storage.saveSettings({ blocklist: [...new Set([...(settings.blocklist || []), origin])] });
+          const attemptKey = getSuspicionKey(context.tabId, context.targetUrl);
+          const currentAttempt = riskState.normalizeAttemptState(suspiciousAttempts.get(attemptKey), Date.now(), settings.suspiciousWindowMs);
+          currentAttempt.tempBlockUntil = Date.now() + settings.temporaryBlockMs;
+          suspiciousAttempts.set(attemptKey, currentAttempt);
           try {
             await api.tabs.update(context.tabId, { active: true });
           } catch (_) {}
@@ -345,8 +483,14 @@
       if (key.startsWith(`${tabId}:`)) frameSignals.delete(key);
     }
 
+    tabSameDocumentState.delete(tabId);
+
     for (const key of oneTimeAllows.keys()) {
       if (key.startsWith(`${tabId}|`)) oneTimeAllows.delete(key);
+    }
+
+    for (const key of suspiciousAttempts.keys()) {
+      if (key.startsWith(`${tabId}|`)) suspiciousAttempts.delete(key);
     }
 
     for (const [promptKey, value] of activePromptKeys.entries()) {
@@ -375,6 +519,20 @@
     for (const [key, value] of redirectCounts.entries()) {
       if (!value || Date.now() - value.updatedAt > redirectMaxAgeMs) {
         redirectCounts.delete(key);
+      }
+    }
+
+    const attemptMaxAgeMs = 10 * 60 * 1000;
+    for (const [key, value] of suspiciousAttempts.entries()) {
+      if (!value || Date.now() - value.windowStartedAt > attemptMaxAgeMs) {
+        suspiciousAttempts.delete(key);
+      }
+    }
+
+    const sameDocMaxAgeMs = 60 * 1000;
+    for (const [tabId, value] of tabSameDocumentState.entries()) {
+      if (!value || Date.now() - Math.max(value.lastHistoryEventTs || 0, value.recentSameDocumentSuspiciousTs || 0) > sameDocMaxAgeMs) {
+        tabSameDocumentState.delete(tabId);
       }
     }
   }, 15000);

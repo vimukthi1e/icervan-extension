@@ -18,6 +18,14 @@
     document.getElementById('promptOnMediumRisk').checked = !!settings.promptOnMediumRisk;
     document.getElementById('debugMode').checked = !!settings.debugMode;
     document.getElementById('logCap').value = settings.logCap;
+    document.getElementById('promptCooldownMs').value = settings.promptCooldownMs;
+    document.getElementById('maxSuspiciousPromptsPerOriginWindow').value = settings.maxSuspiciousPromptsPerOriginWindow;
+    document.getElementById('suspiciousWindowMs').value = settings.suspiciousWindowMs;
+    document.getElementById('temporaryBlockMs').value = settings.temporaryBlockMs;
+  }
+
+  function numberInput(id, min, fallback) {
+    return Math.max(min, Number(document.getElementById(id).value || fallback));
   }
 
   async function save() {
@@ -28,7 +36,11 @@
       logContentEvents: document.getElementById('logContentEvents').checked,
       promptOnMediumRisk: document.getElementById('promptOnMediumRisk').checked,
       debugMode: document.getElementById('debugMode').checked,
-      logCap: Math.max(100, Number(document.getElementById('logCap').value || 800))
+      logCap: numberInput('logCap', 100, 800),
+      promptCooldownMs: numberInput('promptCooldownMs', 1000, 15000),
+      maxSuspiciousPromptsPerOriginWindow: numberInput('maxSuspiciousPromptsPerOriginWindow', 1, 2),
+      suspiciousWindowMs: numberInput('suspiciousWindowMs', 5000, 45000),
+      temporaryBlockMs: numberInput('temporaryBlockMs', 5000, 60000)
     };
     await api.runtime.sendMessage({ type: 'NAVGUARD_SAVE_SETTINGS', payload });
     document.getElementById('status').textContent = 'Saved.';

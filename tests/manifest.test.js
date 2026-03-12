@@ -37,3 +37,13 @@ test('background defaults keep request filter patterns aligned with manifest sco
     assert.ok(defaultsSource.includes(`'${pattern}'`));
   }
 });
+
+
+test('background includes risk-state module before orchestrator', () => {
+  const scripts = manifest.background && manifest.background.scripts ? manifest.background.scripts : [];
+  const riskIdx = scripts.indexOf('src/background/risk-state.js');
+  const bgIdx = scripts.indexOf('src/background/background.js');
+  assert.ok(riskIdx >= 0);
+  assert.ok(bgIdx >= 0);
+  assert.ok(riskIdx < bgIdx);
+});

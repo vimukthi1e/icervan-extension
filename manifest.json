@@ -18,6 +18,7 @@
       "src/background/storage.js",
       "src/background/logger.js",
       "src/background/policy.js",
+      "src/background/risk-state.js",
       "src/background/approval.js",
       "src/background/background.js"
     ]
@@ -39,7 +40,9 @@
         "http://*/*",
         "https://*/*"
       ],
-      "js": ["src/content/content.js"],
+      "js": [
+        "src/content/content.js"
+      ],
       "run_at": "document_start",
       "all_frames": true
     }

@@ -23,7 +23,8 @@ MVP + hardening pass implemented.
   - Always allow this origin
   - Always block this origin
   - Cancel / stay here
-- Local structured logs with ring-buffer cap, viewer, JSON export, and clear.
+- Local structured logs with ring-buffer cap, viewer summary, JSON export, and clear.
+- Prompt flood controls: cooldown, repeated-attempt windowing, and temporary per-tab+origin suppression.
 
 ## Why this architecture (vs userscripts)
 Userscripts are too late for many takeover paths. This extension uses privileged request interception in background context to cancel suspicious main-frame requests before full page takeover where possible, then offers user approval to continue intentionally.
@@ -42,6 +43,7 @@ No telemetry, no remote services, no analytics SDK, no external CDN.
 - `src/background/`
   - `background.js` orchestration and listeners
   - `policy.js` scoring/classification engine
+  - `risk-state.js` prompt suppression / suspicious-attempt state helpers
   - `storage.js` local persistence helpers
   - `logger.js` structured log ring-buffer
   - `approval.js` prompt lifecycle management
@@ -55,6 +57,7 @@ No telemetry, no remote services, no analytics SDK, no external CDN.
   - `logs.html/js`
   - `prompt.html/js`
 - `tests/policy.test.js`
+- `tests/risk-state.test.js`
 - `docs/ARCHITECTURE.md`
 
 ## Install (temporary, Firefox desktop)
@@ -80,15 +83,22 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - [ ] Monitor mode never blocks, still logs.
 - [ ] “Always allow origin” appends to allowlist and allows future matching.
 - [ ] “Always block origin” appends to blocklist and blocks future matching.
-- [ ] Export logs produces JSON download.
+- [ ] Repeated suspicious redirects on the same tab+origin do not open repeated prompt tabs inside cooldown window.
+- [ ] Repeated suspicious attempts eventually trigger temporary suppression/block escalation.
+- [ ] Same-document history bursts (push/replace/hash/popstate storms) are reflected in logs and influence risk scoring.
+- [ ] Cancel/stay closes prompt tab and returns focus to original tab.
+- [ ] Export logs produces JSON download with decision reasons and redirect/same-document context.
 - [ ] Clear logs empties viewer.
 - [ ] No remote requests initiated by extension itself.
+- [ ] Verified on Firefox desktop (about:debugging temporary add-on).
+- [ ] Verify on Iceraven/Firefox Android: prompt UX tolerability, redirect-loop behavior, and back-button impact.
 
 ## Known limitations
 - Some navigation behavior on Firefox Android variants cannot always be preempted before visible effects, especially non-HTTP(S) schemes and browser-internal pages that extensions cannot inject into.
 - Browser event timing differs by platform/version; prompt timing may vary.
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
-- Prompt dedupe is keyed by tab + target origin for a short window; very fast multi-origin redirect storms can still generate multiple prompts.
+- Same-document/history API tricks are mostly observable and influence scoring; they cannot always be safely blocked preemptively with Firefox extension APIs.
+- Prompt dedupe/suppression is scoped by tab + target origin and time windows; adversarial multi-origin bounce chains can still require multiple user decisions.
 - Gesture attribution is heuristic and can produce false positives/negatives.
 
 ## Packaging

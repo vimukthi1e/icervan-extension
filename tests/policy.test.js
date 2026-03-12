@@ -82,3 +82,25 @@ test('monitor mode always allows', () => {
   }, baseSettings);
   assert.equal(out.action, 'allow');
 });
+
+
+test('same-document burst increases risk classification', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://cross.example/a',
+    sourceUrl: 'https://cross.example/home',
+    sameOrigin: true,
+    recentUserGesture: false,
+    isMainFrame: true,
+    mode: 'smart',
+    recentSameDocumentSuspicious: true,
+    historyBurstCount: 5,
+    repeatedSuspiciousCount: 2
+  }, {
+    ...baseSettings,
+    historyBurstThreshold: 4
+  });
+
+  assert.equal(out.action, 'prompt');
+  assert.ok(out.reasons.includes('same_document_signal'));
+  assert.ok(out.reasons.includes('history_burst'));
+});
