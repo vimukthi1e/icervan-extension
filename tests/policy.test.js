@@ -14,6 +14,7 @@ test('blocklist overrides and blocks', () => {
     blocklist: ['https://evil.example']
   });
   assert.equal(out.action, 'block');
+  assert.equal(out.classification, 'blocked_list');
 });
 
 test('allowlist overrides and allows', () => {
@@ -49,6 +50,25 @@ test('high-risk smart path prompts', () => {
   }, baseSettings);
   assert.equal(out.action, 'prompt');
   assert.equal(out.classification, 'high_risk');
+});
+
+test('medium risk can be configured to allow without prompt', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://cross.example/a',
+    sourceUrl: 'https://cross.example/home',
+    sameOrigin: true,
+    recentUserGesture: false,
+    isMainFrame: true,
+    requestType: 'createdNavigationTarget',
+    redirectCount: 0,
+    mode: 'smart'
+  }, {
+    ...baseSettings,
+    promptOnMediumRisk: false
+  });
+
+  assert.equal(out.classification, 'low_risk');
+  assert.equal(out.action, 'allow');
 });
 
 test('monitor mode always allows', () => {

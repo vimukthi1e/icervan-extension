@@ -10,10 +10,10 @@ MVP + hardening pass implemented.
   - **Smart (default)**: allow likely user-driven navigations, gate suspicious ones.
   - **Strict**: prompt before suspicious/uncertain top-level navigations.
   - **Monitor-only**: no blocking, only logging.
-- Multi-signal policy engine (not single heuristic).
+- Multi-signal policy engine (not single heuristic) with explicit `allow` / `prompt` / `block` actions.
 - Early interception via cancellable `webRequest` main-frame handling.
 - Popup/new-tab target monitoring via `webNavigation`.
-- Page-world instrumentation for:
+- Page-world instrumentation for top-frame decisions, with frame-aware signal tracking to avoid iframe signal contamination, including:
   - `window.open`
   - `location.assign`, `location.replace`
   - `history.pushState`, `history.replaceState`
@@ -88,6 +88,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - Some navigation behavior on Firefox Android variants cannot always be preempted before visible effects, especially non-HTTP(S) schemes and browser-internal pages that extensions cannot inject into.
 - Browser event timing differs by platform/version; prompt timing may vary.
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
+- Prompt dedupe is keyed by tab + target origin for a short window; very fast multi-origin redirect storms can still generate multiple prompts.
 - Gesture attribution is heuristic and can produce false positives/negatives.
 
 ## Packaging

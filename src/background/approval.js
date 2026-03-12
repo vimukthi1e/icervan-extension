@@ -14,8 +14,8 @@
     await storage.savePendingPrompts(pending);
 
     const promptUrl = api.runtime.getURL(`src/ui/prompt.html?id=${encodeURIComponent(id)}`);
-    await api.tabs.create({ url: promptUrl, active: true });
-    return id;
+    const promptTab = await api.tabs.create({ url: promptUrl, active: true });
+    return { id, promptTabId: promptTab.id };
   }
 
   async function getPrompt(id) {
