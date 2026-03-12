@@ -1,0 +1,43 @@
+{
+  "manifest_version": 2,
+  "name": "Iceraven Navigation Guard",
+  "version": "0.1.0",
+  "description": "Firefox-first navigation guard to reduce unwanted redirects, popups, and history pollution.",
+  "permissions": [
+    "webRequest",
+    "webRequestBlocking",
+    "webNavigation",
+    "tabs",
+    "storage",
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": [
+      "src/background/defaults.js",
+      "src/background/storage.js",
+      "src/background/logger.js",
+      "src/background/policy.js",
+      "src/background/approval.js",
+      "src/background/background.js"
+    ]
+  },
+  "options_ui": {
+    "page": "src/ui/options.html",
+    "open_in_tab": true
+  },
+  "browser_action": {
+    "default_title": "Navigation Guard",
+    "default_popup": "src/ui/popup.html"
+  },
+  "web_accessible_resources": [
+    "src/content/inpage-hook.js"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ]
+}
