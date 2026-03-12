@@ -5,15 +5,23 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h2>Suspicious navigation detected</h2>
-  <div id="details" class="card mono"></div>
+  <h2>Suspicious navigation blocked</h2>
+  <div id="summary" class="card"></div>
+  <div class="card">
+    <h3>Why this was flagged</h3>
+    <ul id="reasons"></ul>
+  </div>
   <div class="card">
     <button id="continueOnce">Continue once</button>
-    <button id="alwaysAllow">Always allow this origin</button>
-    <button id="alwaysBlock">Always block this origin</button>
-    <button id="cancel">Cancel / stay here</button>
+    <button id="alwaysAllow">Always allow this destination origin</button>
+    <button id="alwaysBlock">Always block this destination origin</button>
+    <button id="cancel">Stay on current page</button>
     <div id="status"></div>
   </div>
+  <details class="card">
+    <summary>Technical details</summary>
+    <pre id="details" class="mono"></pre>
+  </details>
   <script src="prompt.js"></script>
 </body>
 </html>

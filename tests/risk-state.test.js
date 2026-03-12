@@ -28,3 +28,8 @@ test('prompt suppression uses cooldown', () => {
   assert.equal(risk.shouldSuppressPrompt(withPrompt, now + 500, 1000), true);
   assert.equal(risk.shouldSuppressPrompt(withPrompt, now + 1200, 1000), false);
 });
+
+test('prompt key includes tab, source origin, and destination origin', () => {
+  const key = risk.buildPromptKey(4, 'https://dest.example/path?a=1', 'https://source.example/page');
+  assert.equal(key, '4|https://source.example->https://dest.example');
+});

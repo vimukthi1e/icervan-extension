@@ -5,6 +5,20 @@
     root.NavGuardRiskState = factory();
   }
 })(typeof self !== 'undefined' ? self : this, function () {
+  function toOrigin(url) {
+    try {
+      return new URL(url).origin;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function buildPromptKey(tabId, targetUrl, sourceUrl) {
+    const targetOrigin = toOrigin(targetUrl) || String(targetUrl || '');
+    const sourceOrigin = toOrigin(sourceUrl) || '';
+    return `${tabId}|${sourceOrigin}->${targetOrigin}`;
+  }
+
   function normalizeAttemptState(state, now, windowMs) {
     if (!state || now - state.windowStartedAt > windowMs) {
       return {
@@ -66,6 +80,8 @@
   }
 
   return {
+    toOrigin,
+    buildPromptKey,
     normalizeAttemptState,
     isTemporarilyBlocked,
     shouldSuppressPrompt,

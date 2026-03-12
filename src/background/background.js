@@ -23,9 +23,8 @@
     return `${tabId}:${frameId}`;
   }
 
-  function getPromptKey(tabId, targetUrl) {
-    const origin = policy.parseOrigin(targetUrl) || String(targetUrl || '');
-    return `${tabId}|${origin}`;
+  function getPromptKey(tabId, targetUrl, sourceUrl) {
+    return riskState.buildPromptKey(tabId, targetUrl, sourceUrl);
   }
 
   function getSuspicionKey(tabId, targetUrl) {
@@ -158,6 +157,7 @@
       hookSignal: getHookSignal(details.tabId, sourceFrameId),
       recentSameDocumentSuspicious: sameDocumentCtx.recentSameDocumentSuspicious,
       historyBurstCount: sameDocumentCtx.historyBurstCount,
+      sameDocumentLastEventType: sameDocumentCtx.sameDocumentLastEventType,
       repeatedSuspiciousCount: attemptState.count
     };
 
@@ -259,7 +259,7 @@
       return { cancel: true };
     }
 
-    const promptKey = getPromptKey(details.tabId, details.url);
+    const promptKey = getPromptKey(details.tabId, details.url, ctx.sourceUrl);
     const existingPrompt = activePromptKeys.get(promptKey);
     if (existingPrompt && existingPrompt.expiresAt > Date.now()) {
       if (typeof existingPrompt.promptTabId === 'number') {

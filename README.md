@@ -73,7 +73,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 2. Choose mode (`smart`, `strict`, `monitor`).
 3. Optionally edit allowlist/blocklist (one entry per line).
 4. Browse normally.
-5. On suspicious navigation, prompt page appears with decision actions.
+5. On suspicious navigation, a prompt page appears with human-readable source/destination, risk reasons, and decision actions.
 6. Review logs in `Logs` viewer, export JSON when needed.
 
 ## Manual QA checklist
@@ -98,7 +98,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - Browser event timing differs by platform/version; prompt timing may vary.
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
 - Same-document/history API tricks are mostly observable and influence scoring; they cannot always be safely blocked preemptively with Firefox extension APIs.
-- Prompt dedupe/suppression is scoped by tab + target origin and time windows; adversarial multi-origin bounce chains can still require multiple user decisions.
+- Prompt dedupe is keyed by tab + source-origin + destination-origin, with cooldown suppression and temporary escalation windows; adversarial multi-origin bounce chains can still require multiple user decisions.
 - Gesture attribution is heuristic and can produce false positives/negatives.
 
 ## Packaging

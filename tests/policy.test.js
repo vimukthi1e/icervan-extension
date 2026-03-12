@@ -104,3 +104,18 @@ test('same-document burst increases risk classification', () => {
   assert.ok(out.reasons.includes('same_document_signal'));
   assert.ok(out.reasons.includes('history_burst'));
 });
+
+
+test('location.replace hook contributes to risk reasons', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://dest.example/a',
+    sourceUrl: 'https://source.example',
+    sameOrigin: false,
+    recentUserGesture: false,
+    isMainFrame: true,
+    hookSignal: 'location.replace',
+    mode: 'smart'
+  }, baseSettings);
+
+  assert.ok(out.reasons.includes('script_navigation_hook'));
+});
