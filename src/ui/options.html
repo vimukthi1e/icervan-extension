@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <h2>Iceraven Navigation Guard - Options</h2>
+  <div class="card">
+    <label for="mode">Protection mode</label>
+    <select id="mode">
+      <option value="smart">Smart (default)</option>
+      <option value="strict">Strict</option>
+      <option value="monitor">Monitor only</option>
+    </select>
+
+    <label for="allowlist">Allowlist (one origin/host/prefix per line)</label>
+    <textarea id="allowlist"></textarea>
+
+    <label for="blocklist">Blocklist (one origin/host/prefix per line)</label>
+    <textarea id="blocklist"></textarea>
+
+    <div class="row">
+      <label><input type="checkbox" id="logContentEvents" /> Log content/page hook events</label>
+      <label><input type="checkbox" id="promptOnMediumRisk" /> Prompt on medium risk</label>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="debugMode" /> Debug mode</label>
+      <label>Log cap <input type="number" id="logCap" min="100" max="5000" /></label>
+    </div>
+
+    <h3>Prompt flood controls</h3>
+    <div class="row">
+      <label>Prompt cooldown (ms)
+        <input type="number" id="promptCooldownMs" min="1000" max="120000" />
+      </label>
+      <label>Min attempts before cooldown suppression
+        <input type="number" id="minPromptAttemptsBeforeSuppression" min="1" max="20" />
+      </label>
+    </div>
+    <div class="row">
+      <label>Max prompt-worthy attempts / window
+        <input type="number" id="maxSuspiciousPromptsPerOriginWindow" min="1" max="20" />
+      </label>
+      <label>Temporary block duration (ms)
+        <input type="number" id="temporaryBlockMs" min="5000" max="300000" />
+      </label>
+    </div>
+    <div class="row">
+      <label>Suspicious window (ms)
+        <input type="number" id="suspiciousWindowMs" min="5000" max="300000" />
+      </label>
+    </div>
+
+    <button id="save">Save settings</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="card">
+    <button id="openLogs">Open log viewer</button>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
