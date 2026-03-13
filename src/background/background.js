@@ -359,10 +359,21 @@
         if (frameId === 0) {
           const state = updateSameDocumentState(sender.tab.id, message.eventType, settings);
           const suspiciousEvents = new Set(['location.replace', 'location.assign', 'window.open', 'history.replaceState']);
+          const scriptNavEvents = new Set(['window.open', 'location.replace', 'location.assign']);
 
           if (suspiciousEvents.has(message.eventType)) {
             logger.appendLog({
               event: 'same_document_signal',
+              tabId: sender.tab.id,
+              frameId,
+              hookType: message.eventType,
+              historyBurstCount: state.historyBurstCount
+            });
+          }
+
+          if (scriptNavEvents.has(message.eventType)) {
+            logger.appendLog({
+              event: 'script_navigation_signal',
               tabId: sender.tab.id,
               frameId,
               hookType: message.eventType,

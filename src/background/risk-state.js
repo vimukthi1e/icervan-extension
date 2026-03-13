@@ -45,7 +45,9 @@
 
   function shouldSuppressPrompt(state, now, cooldownMs, minAttemptsBeforeSuppression) {
     if (!state || !state.lastPromptAt) return false;
-    if ((state.count || 0) < (minAttemptsBeforeSuppression || 2)) return false;
+    const parsedThreshold = Number(minAttemptsBeforeSuppression);
+    const threshold = Number.isFinite(parsedThreshold) ? Math.max(1, parsedThreshold) : 1;
+    if ((state.count || 0) < threshold) return false;
     return now - state.lastPromptAt < cooldownMs;
   }
 

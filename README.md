@@ -71,10 +71,11 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 ## Usage
 1. Open extension options.
 2. Choose mode (`smart`, `strict`, `monitor`).
-3. Optionally edit allowlist/blocklist (one entry per line).
-4. Browse normally.
-5. On suspicious navigation, a prompt page appears with human-readable source/destination, risk reasons, and decision actions.
-6. Review logs in `Logs` viewer, export JSON when needed.
+3. Configure prompt flood controls (including **Min attempts before cooldown suppression**) as needed.
+4. Optionally edit allowlist/blocklist (one entry per line).
+5. Browse normally.
+6. On suspicious navigation, a prompt page appears with human-readable source/destination, risk reasons, and decision actions.
+7. Review logs in `Logs` viewer, export JSON when needed.
 
 ## Manual QA checklist
 - [ ] Smart mode allows normal same-origin click navigation.
@@ -97,7 +98,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - Some navigation behavior on Firefox Android variants cannot always be preempted before visible effects, especially non-HTTP(S) schemes and browser-internal pages that extensions cannot inject into.
 - Browser event timing differs by platform/version; prompt timing may vary.
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
-- Same-document/history API tricks are mostly observable and influence scoring (including `location.assign/replace`, `history.replaceState`, and lighter weighting for `history.pushState`); they cannot always be safely blocked preemptively with Firefox extension APIs.
+- Same-document/history API tricks are mostly observable and influence scoring (including `location.assign/replace`, `history.replaceState`, and lighter weighting for `history.pushState`); logs explicitly include `same_document_signal`, `script_navigation_signal`, and `history_api_signal` for forensics, but these cannot always be safely blocked preemptively with Firefox extension APIs.
 - Prompt dedupe is keyed by tab + source-origin + destination-origin, while cooldown suppression and temporary escalation are tracked per tab + destination-origin; adversarial multi-origin bounce chains can still require multiple user decisions.
 - Gesture attribution is heuristic and can produce false positives/negatives.
 

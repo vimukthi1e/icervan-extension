@@ -53,3 +53,18 @@ test('clearStateForAllow resets count and temporary block', () => {
   assert.equal(cleared.windowStartedAt, 500);
   assert.equal(cleared.lastPromptId, 'p1');
 });
+
+
+test('suppression threshold is configurable', () => {
+  const now = 1000;
+  const withPrompt = {
+    count: 2,
+    windowStartedAt: now,
+    lastPromptAt: now,
+    tempBlockUntil: 0,
+    lastPromptId: 'p1'
+  };
+
+  assert.equal(risk.shouldSuppressPrompt(withPrompt, now + 500, 1000, 3), false);
+  assert.equal(risk.shouldSuppressPrompt({ ...withPrompt, count: 3 }, now + 500, 1000, 3), true);
+});
