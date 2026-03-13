@@ -1,0 +1,11 @@
+:root { color-scheme: light dark; }
+body { font-family: sans-serif; margin: 16px; max-width: 900px; }
+.card { border: 1px solid #8884; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+label { display: block; margin: 8px 0 4px; font-weight: 600; }
+textarea, select, input, button { width: 100%; box-sizing: border-box; margin-bottom: 8px; }
+textarea { min-height: 80px; }
+button { padding: 8px 10px; }
+.row { display: flex; gap: 8px; }
+.row > * { flex: 1; }
+pre { white-space: pre-wrap; max-height: 420px; overflow: auto; background: #0001; padding: 8px; border-radius: 6px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
