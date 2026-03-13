@@ -134,3 +134,32 @@ test('history.replaceState hook contributes to risk reasons', () => {
 
   assert.ok(out.reasons.includes('script_navigation_hook'));
 });
+
+
+test('history.pushState hook contributes to history api risk reason', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://dest.example/c',
+    sourceUrl: 'https://source.example',
+    sameOrigin: false,
+    recentUserGesture: false,
+    isMainFrame: true,
+    hookSignal: 'history.pushState',
+    mode: 'smart'
+  }, baseSettings);
+
+  assert.ok(out.reasons.includes('history_api_hook'));
+});
+
+test('location.assign hook contributes to script navigation reason', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://dest.example/d',
+    sourceUrl: 'https://source.example',
+    sameOrigin: false,
+    recentUserGesture: false,
+    isMainFrame: true,
+    hookSignal: 'location.assign',
+    mode: 'smart'
+  }, baseSettings);
+
+  assert.ok(out.reasons.includes('script_navigation_hook'));
+});

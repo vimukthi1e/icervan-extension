@@ -248,7 +248,7 @@
       return {};
     }
 
-    if (riskState.shouldSuppressPrompt(attemptUpdate.state, Date.now(), settings.promptCooldownMs, 2)) {
+    if (riskState.shouldSuppressPrompt(attemptUpdate.state, Date.now(), settings.promptCooldownMs, settings.minPromptAttemptsBeforeSuppression)) {
       await logger.appendLog({
         event: 'navigation_prompt_suppressed',
         tabId: details.tabId,

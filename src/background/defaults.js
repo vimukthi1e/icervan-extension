@@ -14,6 +14,7 @@
     suspiciousWindowMs: 45000,
     maxSuspiciousPromptsPerOriginWindow: 2,
     temporaryBlockMs: 60000,
+    minPromptAttemptsBeforeSuppression: 2,
     historyBurstWindowMs: 4000,
     historyBurstThreshold: 4
   };

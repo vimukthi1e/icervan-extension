@@ -51,6 +51,7 @@
       redirect_chain: 'Redirect chain detected',
       script_navigation_hook: 'Script navigation signal detected',
       same_document_signal: 'Recent same-document navigation trick signal',
+      history_api_hook: 'History API push-state signal observed',
       history_burst: 'Rapid history/hash activity burst',
       repeated_suspicious_origin: 'Repeated suspicious attempts for this origin'
     };

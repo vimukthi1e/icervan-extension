@@ -36,3 +36,20 @@ test('prompt key includes tab, source origin, and destination origin', () => {
   const key = risk.buildPromptKey(4, 'https://dest.example/path?a=1', 'https://source.example/page');
   assert.equal(key, '4|https://source.example->https://dest.example');
 });
+
+
+test('clearStateForAllow resets count and temporary block', () => {
+  const state = {
+    count: 5,
+    windowStartedAt: 100,
+    lastPromptAt: 200,
+    tempBlockUntil: 99999,
+    lastPromptId: 'p1'
+  };
+
+  const cleared = risk.clearStateForAllow(state, 500);
+  assert.equal(cleared.count, 0);
+  assert.equal(cleared.tempBlockUntil, 0);
+  assert.equal(cleared.windowStartedAt, 500);
+  assert.equal(cleared.lastPromptId, 'p1');
+});

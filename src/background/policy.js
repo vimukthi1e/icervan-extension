@@ -86,6 +86,12 @@
       reasons.push('script_navigation_hook');
     }
 
+
+    if (ctx.hookSignal === 'history.pushState') {
+      score += 8;
+      reasons.push('history_api_hook');
+    }
+
     if (ctx.recentSameDocumentSuspicious) {
       score += 15;
       reasons.push('same_document_signal');
