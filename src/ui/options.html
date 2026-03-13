@@ -34,16 +34,21 @@
       <label>Prompt cooldown (ms)
         <input type="number" id="promptCooldownMs" min="1000" max="120000" />
       </label>
+      <label>Min attempts before cooldown suppression
+        <input type="number" id="minPromptAttemptsBeforeSuppression" min="1" max="20" />
+      </label>
+    </div>
+    <div class="row">
       <label>Max prompt-worthy attempts / window
         <input type="number" id="maxSuspiciousPromptsPerOriginWindow" min="1" max="20" />
+      </label>
+      <label>Temporary block duration (ms)
+        <input type="number" id="temporaryBlockMs" min="5000" max="300000" />
       </label>
     </div>
     <div class="row">
       <label>Suspicious window (ms)
         <input type="number" id="suspiciousWindowMs" min="5000" max="300000" />
-      </label>
-      <label>Temporary block duration (ms)
-        <input type="number" id="temporaryBlockMs" min="5000" max="300000" />
       </label>
     </div>
 

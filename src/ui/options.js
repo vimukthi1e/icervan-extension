@@ -19,6 +19,7 @@
     document.getElementById('debugMode').checked = !!settings.debugMode;
     document.getElementById('logCap').value = settings.logCap;
     document.getElementById('promptCooldownMs').value = settings.promptCooldownMs;
+    document.getElementById('minPromptAttemptsBeforeSuppression').value = settings.minPromptAttemptsBeforeSuppression;
     document.getElementById('maxSuspiciousPromptsPerOriginWindow').value = settings.maxSuspiciousPromptsPerOriginWindow;
     document.getElementById('suspiciousWindowMs').value = settings.suspiciousWindowMs;
     document.getElementById('temporaryBlockMs').value = settings.temporaryBlockMs;
@@ -38,6 +39,7 @@
       debugMode: document.getElementById('debugMode').checked,
       logCap: numberInput('logCap', 100, 800),
       promptCooldownMs: numberInput('promptCooldownMs', 1000, 15000),
+      minPromptAttemptsBeforeSuppression: numberInput('minPromptAttemptsBeforeSuppression', 1, 2),
       maxSuspiciousPromptsPerOriginWindow: numberInput('maxSuspiciousPromptsPerOriginWindow', 1, 2),
       suspiciousWindowMs: numberInput('suspiciousWindowMs', 5000, 45000),
       temporaryBlockMs: numberInput('temporaryBlockMs', 5000, 60000)

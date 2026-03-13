@@ -47,3 +47,8 @@ test('background includes risk-state module before orchestrator', () => {
   assert.ok(bgIdx >= 0);
   assert.ok(riskIdx < bgIdx);
 });
+
+
+test('defaults include explicit suppression threshold setting', () => {
+  assert.ok(defaultsSource.includes('minPromptAttemptsBeforeSuppression'));
+});

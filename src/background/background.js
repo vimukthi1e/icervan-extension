@@ -370,6 +370,16 @@
             });
           }
 
+          if (message.eventType === 'history.pushState' || message.eventType === 'history.replaceState') {
+            logger.appendLog({
+              event: 'history_api_signal',
+              tabId: sender.tab.id,
+              frameId,
+              hookType: message.eventType,
+              historyBurstCount: state.historyBurstCount
+            });
+          }
+
           if (state.historyBurstCount >= settings.historyBurstThreshold) {
             logger.appendLog({
               event: 'same_document_burst',
