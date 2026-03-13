@@ -25,8 +25,11 @@
     document.getElementById('temporaryBlockMs').value = settings.temporaryBlockMs;
   }
 
-  function numberInput(id, min, fallback) {
-    return Math.max(min, Number(document.getElementById(id).value || fallback));
+  function numberInput(id, min, max, fallback) {
+    const raw = Number(document.getElementById(id).value);
+    const finite = Number.isFinite(raw) ? raw : fallback;
+    const bounded = Math.min(max, Math.max(min, Math.floor(finite)));
+    return bounded;
   }
 
   async function save() {
@@ -37,12 +40,12 @@
       logContentEvents: document.getElementById('logContentEvents').checked,
       promptOnMediumRisk: document.getElementById('promptOnMediumRisk').checked,
       debugMode: document.getElementById('debugMode').checked,
-      logCap: numberInput('logCap', 100, 800),
-      promptCooldownMs: numberInput('promptCooldownMs', 1000, 15000),
-      minPromptAttemptsBeforeSuppression: numberInput('minPromptAttemptsBeforeSuppression', 1, 2),
-      maxSuspiciousPromptsPerOriginWindow: numberInput('maxSuspiciousPromptsPerOriginWindow', 1, 2),
-      suspiciousWindowMs: numberInput('suspiciousWindowMs', 5000, 45000),
-      temporaryBlockMs: numberInput('temporaryBlockMs', 5000, 60000)
+      logCap: numberInput('logCap', 100, 5000, 800),
+      promptCooldownMs: numberInput('promptCooldownMs', 1000, 120000, 15000),
+      minPromptAttemptsBeforeSuppression: numberInput('minPromptAttemptsBeforeSuppression', 1, 20, 2),
+      maxSuspiciousPromptsPerOriginWindow: numberInput('maxSuspiciousPromptsPerOriginWindow', 1, 20, 2),
+      suspiciousWindowMs: numberInput('suspiciousWindowMs', 5000, 300000, 45000),
+      temporaryBlockMs: numberInput('temporaryBlockMs', 5000, 300000, 60000)
     };
     await api.runtime.sendMessage({ type: 'NAVGUARD_SAVE_SETTINGS', payload });
     document.getElementById('status').textContent = 'Saved.';

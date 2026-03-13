@@ -53,8 +53,8 @@ Tradeoff: added complexity, but materially better prevention + diagnosis while s
 
 Chosen design is a hybrid policy-driven engine:
 - **Interception layer**: `onBeforeRequest` for main-frame gating + popup target handling.
-- **Policy layer**: score/classify via signals (same-origin, gesture recency, redirect chain, hook type, mode).
-- **Approval layer**: prompt tab with actions (continue once / always allow origin / always block origin / cancel).
+- **Policy layer**: score/classify via signals (same-origin, gesture recency, redirect chain, hook type, mode); classification and action are separated so medium-risk can be allowed without being mislabeled as low-risk when configured.
+- **Approval layer**: prompt tab with actions (continue once / always allow origin / always block origin / cancel), with pending prompt metadata including prompt tab id for expiry cleanup.
 - **Observability layer**: capped local logs with export/clear.
 - **UX layer**: options page, popup shortcuts, logs viewer.
 

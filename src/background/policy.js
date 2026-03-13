@@ -119,8 +119,13 @@
       return { score, classification: 'high_risk', action: 'prompt', reasons };
     }
 
-    if (score >= 35 && settings.promptOnMediumRisk) {
-      return { score, classification: 'medium_risk', action: 'prompt', reasons };
+    if (score >= 35) {
+      return {
+        score,
+        classification: 'medium_risk',
+        action: settings.promptOnMediumRisk ? 'prompt' : 'allow',
+        reasons
+      };
     }
 
     return { score, classification: 'low_risk', action: 'allow', reasons };

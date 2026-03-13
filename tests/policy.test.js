@@ -67,8 +67,28 @@ test('medium risk can be configured to allow without prompt', () => {
     promptOnMediumRisk: false
   });
 
-  assert.equal(out.classification, 'low_risk');
+  assert.equal(out.classification, 'medium_risk');
   assert.equal(out.action, 'allow');
+});
+
+
+test('medium risk prompts when promptOnMediumRisk is enabled', () => {
+  const out = evaluateNavigation({
+    targetUrl: 'https://cross.example/a',
+    sourceUrl: 'https://cross.example/home',
+    sameOrigin: true,
+    recentUserGesture: false,
+    isMainFrame: true,
+    requestType: 'createdNavigationTarget',
+    redirectCount: 0,
+    mode: 'smart'
+  }, {
+    ...baseSettings,
+    promptOnMediumRisk: true
+  });
+
+  assert.equal(out.classification, 'medium_risk');
+  assert.equal(out.action, 'prompt');
 });
 
 test('monitor mode always allows', () => {

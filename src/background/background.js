@@ -441,10 +441,12 @@
     }
 
     if (message.type === 'NAVGUARD_RESOLVE_PROMPT') {
-      const promptTabId = sender && sender.tab ? sender.tab.id : null;
+      const senderPromptTabId = sender && sender.tab ? sender.tab.id : null;
       return approval.resolvePrompt(message.id).then(async (item) => {
         clearPromptKey(message.id);
         if (!item) return { ok: false, reason: 'missing_prompt' };
+
+        const promptTabId = typeof senderPromptTabId === 'number' ? senderPromptTabId : item.promptTabId;
 
         const settings = await storage.getSettings();
         const { action } = message;
@@ -535,7 +537,7 @@
   });
 
   setInterval(() => {
-    approval.cleanupExpiredPrompts();
+    approval.cleanupExpiredPrompts().catch(() => {});
 
     for (const [key, expiresAt] of oneTimeAllows.entries()) {
       if (expiresAt <= Date.now()) oneTimeAllows.delete(key);

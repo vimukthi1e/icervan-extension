@@ -10,7 +10,8 @@ MVP + hardening pass implemented.
   - **Smart (default)**: allow likely user-driven navigations, gate suspicious ones.
   - **Strict**: prompt before suspicious/uncertain top-level navigations.
   - **Monitor-only**: no blocking, only logging.
-- Multi-signal policy engine (not single heuristic) with explicit `allow` / `prompt` / `block` actions.
+- Multi-signal policy engine (not single heuristic) with explicit risk classification and decision action (`allow` / `prompt` / `block`).
+- Medium-risk traffic remains classified as `medium_risk` even when `promptOnMediumRisk` is disabled and action falls back to `allow`.
 - Early interception via cancellable `webRequest` main-frame handling.
 - Popup/new-tab target monitoring via `webNavigation`.
 - Page-world instrumentation for top-frame decisions, with frame-aware signal tracking to avoid iframe signal contamination, including:
@@ -100,6 +101,7 @@ For Iceraven/Firefox Android-style setups, use the browser’s extension sideloa
 - History preservation is best-effort: cancellation before takeover helps, but browser session-history internals still control some outcomes.
 - Same-document/history API tricks are mostly observable and influence scoring (including `location.assign/replace`, `history.replaceState`, and lighter weighting for `history.pushState`); logs explicitly include `same_document_signal`, `script_navigation_signal`, and `history_api_signal` for forensics, but these cannot always be safely blocked preemptively with Firefox extension APIs.
 - Prompt dedupe is keyed by tab + source-origin + destination-origin, while cooldown suppression and temporary escalation are tracked per tab + destination-origin; adversarial multi-origin bounce chains can still require multiple user decisions.
+- Prompt records persist prompt-tab metadata and expiry cleanup attempts to close orphaned prompt tabs, but mobile/browser tab APIs can still race or deny tab-close operations in some edge cases.
 - Gesture attribution is heuristic and can produce false positives/negatives.
 
 ## Packaging

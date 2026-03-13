@@ -13,10 +13,19 @@
   }
 
   function setButtonsDisabled(disabled) {
-    ['continueOnce', 'alwaysAllow', 'alwaysBlock', 'cancel'].forEach((id) => {
-      const button = document.getElementById(id);
+    ['continueOnce', 'alwaysAllow', 'alwaysBlock', 'cancel'].forEach((buttonId) => {
+      const button = document.getElementById(buttonId);
       if (button) button.disabled = disabled;
     });
+  }
+
+  function appendSummaryRow(container, label, value) {
+    const p = document.createElement('p');
+    const strong = document.createElement('strong');
+    strong.textContent = `${label}:`;
+    p.appendChild(strong);
+    p.appendChild(document.createTextNode(` ${value}`));
+    container.appendChild(p);
   }
 
   function renderSummary(context) {
@@ -25,21 +34,24 @@
     const sourceOrigin = toOrigin(source) || '(unknown)';
     const targetOrigin = toOrigin(target) || '(unknown)';
     const risk = context.decision && context.decision.classification ? context.decision.classification : 'unknown';
+    const summary = document.getElementById('summary');
+    summary.textContent = '';
 
-    document.getElementById('summary').innerHTML = [
-      `<p><strong>From:</strong> ${source}</p>`,
-      `<p><strong>To:</strong> ${target}</p>`,
-      `<p><strong>Source origin:</strong> ${sourceOrigin}</p>`,
-      `<p><strong>Destination origin:</strong> ${targetOrigin}</p>`,
-      `<p><strong>Risk class:</strong> ${risk}</p>`
-    ].join('');
+    appendSummaryRow(summary, 'From', source);
+    appendSummaryRow(summary, 'To', target);
+    appendSummaryRow(summary, 'Source origin', sourceOrigin);
+    appendSummaryRow(summary, 'Destination origin', targetOrigin);
+    appendSummaryRow(summary, 'Risk class', risk);
   }
 
   function renderReasons(context) {
     const reasons = (context.decision && context.decision.reasons) || [];
     const list = document.getElementById('reasons');
+    list.textContent = '';
     if (!reasons.length) {
-      list.innerHTML = '<li>No detailed reasons were recorded.</li>';
+      const item = document.createElement('li');
+      item.textContent = 'No detailed reasons were recorded.';
+      list.appendChild(item);
       return;
     }
 
@@ -53,10 +65,16 @@
       same_document_signal: 'Recent same-document navigation trick signal',
       history_api_hook: 'History API push-state signal observed',
       history_burst: 'Rapid history/hash activity burst',
-      repeated_suspicious_origin: 'Repeated suspicious attempts for this origin'
+      repeated_suspicious_origin: 'Repeated suspicious attempts for this destination origin',
+      blocklist_match: 'Destination origin is on your blocklist',
+      allowlist_match: 'Destination origin is on your allowlist'
     };
 
-    list.innerHTML = reasons.map((reason) => `<li>${labels[reason] || reason}</li>`).join('');
+    reasons.forEach((reason) => {
+      const item = document.createElement('li');
+      item.textContent = labels[reason] || reason;
+      list.appendChild(item);
+    });
   }
 
   async function load() {

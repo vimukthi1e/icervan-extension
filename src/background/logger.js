@@ -4,6 +4,7 @@
   let pendingEntries = [];
   let flushTimer = null;
   let flushingPromise = null;
+  let writeGeneration = 0;
 
   async function flushPending() {
     if (flushingPromise) {
@@ -12,11 +13,16 @@
 
     flushingPromise = (async () => {
       if (!pendingEntries.length) return;
+
+      const generation = writeGeneration;
       const entries = pendingEntries;
       pendingEntries = [];
 
       const settings = await storage.getSettings();
       const logs = await storage.getLogs();
+
+      if (generation !== writeGeneration) return;
+
       const merged = logs.concat(entries);
       const capped = merged.slice(-Math.max(50, settings.logCap || 800));
       await storage.saveLogs(capped);
@@ -48,11 +54,20 @@
   }
 
   async function clearLogs() {
+    writeGeneration += 1;
     pendingEntries = [];
+
     if (flushTimer) {
       clearTimeout(flushTimer);
       flushTimer = null;
     }
+
+    try {
+      if (flushingPromise) {
+        await flushingPromise;
+      }
+    } catch (_) {}
+
     await storage.saveLogs([]);
   }
 
